@@ -1,4 +1,5 @@
-use rltk::{GameState, Rltk, RGB};
+use std::cmp::{min, max};
+use rltk::{GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use specs_derive::Component;
 
@@ -19,6 +20,8 @@ struct Renderable {
 #[derive(Component)]
 struct LeftMover {}
 
+#[derive(Component)]
+struct Player {}
 struct State {
     ecs: World,
 }
@@ -28,7 +31,7 @@ impl GameState for State {
         ctx.cls();
 
         self.run_systems();
-
+        player_input(self, ctx);
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
 
@@ -59,6 +62,30 @@ impl State {
     }
 }
 
+fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
+    let mut positions = ecs.write_storage::<Position>();
+    let mut players = ecs.write_storage::<Player>();
+
+    for(_player, pos) in  (&mut players, &mut positions).join() {
+        pos.x = min(79, max(0, pos.x + delta_x));
+        pos.y = min(49, max(0, pos.y + delta_y));
+    }
+}
+
+fn player_input(gamestate: &mut State, ctx: &mut Rltk) {
+    match ctx.key {
+        None => {},
+        Some(key) => match key {
+            VirtualKeyCode::Left => try_move_player(-1, 0, &mut gamestate.ecs),
+            VirtualKeyCode::Right => try_move_player(1, 0, &mut gamestate.ecs),
+            VirtualKeyCode::Up => try_move_player(0, -1, &mut gamestate.ecs),
+            VirtualKeyCode::Down => try_move_player(0, 1, &mut gamestate.ecs),
+            _ => {}
+
+        }
+    }
+}
+
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
@@ -72,6 +99,18 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Position>();
     gamestate.ecs.register::<Renderable>();
     gamestate.ecs.register::<LeftMover>();
+    gamestate.ecs.register::<Player>();
+
+    gamestate.ecs
+        .create_entity()
+        .with(Position { x: 40, y: 25 })
+        .with(Renderable {
+            glyph: rltk::to_cp437('@'),
+            foreground: RGB::named(rltk::YELLOW),
+            background: RGB::named(rltk::BLACK),
+        })
+        .with(Player{})
+        .build();
 
     for i in 0..10 {
         gamestate.ecs
