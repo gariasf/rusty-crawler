@@ -2,5 +2,7 @@
 name = "rusty-crawler"
 version = "0.1.0"
 edition = "2021"
+authors = ["Guillem Arias"]
 
 [dependencies]
+rltk = { version = "0.8.0" }
