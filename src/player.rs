@@ -27,10 +27,21 @@ pub fn player_input(gamestate: &mut State, ctx: &mut Rltk) {
     match ctx.key {
         None => {}
         Some(key) => match key {
-            VirtualKeyCode::Left => try_move_player(-1, 0, &mut gamestate.ecs),
-            VirtualKeyCode::Right => try_move_player(1, 0, &mut gamestate.ecs),
-            VirtualKeyCode::Up => try_move_player(0, -1, &mut gamestate.ecs),
-            VirtualKeyCode::Down => try_move_player(0, 1, &mut gamestate.ecs),
+            VirtualKeyCode::Left | VirtualKeyCode::Numpad4 | VirtualKeyCode::A => {
+                try_move_player(-1, 0, &mut gamestate.ecs)
+            }
+
+            VirtualKeyCode::Right | VirtualKeyCode::Numpad6 | VirtualKeyCode::D => {
+                try_move_player(1, 0, &mut gamestate.ecs)
+            }
+
+            VirtualKeyCode::Up | VirtualKeyCode::Numpad8 | VirtualKeyCode::W => {
+                try_move_player(0, -1, &mut gamestate.ecs)
+            }
+
+            VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::S => {
+                try_move_player(0, 1, &mut gamestate.ecs)
+            }
             _ => {}
         },
     }
