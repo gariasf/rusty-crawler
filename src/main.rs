@@ -2,12 +2,13 @@ use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
 
 use crate::components::{Player, Position, Renderable};
-use crate::map::{draw_map, new_map, TileType};
+use crate::map::{draw_map, new_map_rooms_and_corridors, TileType};
 use crate::player::player_input;
 
 mod components;
 mod map;
 mod player;
+mod rect;
 
 struct State {
     ecs: World,
@@ -54,7 +55,7 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Renderable>();
     gamestate.ecs.register::<Player>();
 
-    gamestate.ecs.insert(new_map());
+    gamestate.ecs.insert(new_map_rooms_and_corridors());
 
     gamestate
         .ecs
