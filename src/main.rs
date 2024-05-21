@@ -2,7 +2,7 @@ use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
 
 use crate::components::{Player, Position, Renderable};
-use crate::map::{draw_map, new_map_rooms_and_corridors, TileType};
+use crate::map::{draw_map, Map};
 use crate::player::player_input;
 
 mod components;
@@ -27,8 +27,8 @@ impl GameState for State {
         self.run_systems();
         player_input(self, ctx);
 
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        draw_map(&self.ecs, ctx);
+
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
 
@@ -55,10 +55,10 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Renderable>();
     gamestate.ecs.register::<Player>();
 
-    let (rooms, map) = new_map_rooms_and_corridors();
+    let map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
     gamestate.ecs.insert(map);
 
-    let (player_x, player_y) = rooms[0].center();
     gamestate
         .ecs
         .create_entity()
