@@ -60,7 +60,7 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Player>();
     gamestate.ecs.register::<Viewshed>();
 
-    let map = Map::new_map_rooms_and_corridors();
+    let map = Map::new_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
     gamestate.ecs.insert(map);
 
