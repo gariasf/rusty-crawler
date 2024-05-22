@@ -1,8 +1,9 @@
 use std::cmp::{max, min};
 
-use rltk::{RandomNumberGenerator, Rltk, RGB};
-use specs::World;
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use specs::{Join, World, WorldExt};
 
+use crate::components::{Player, Viewshed};
 use crate::rect::Rect;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -102,37 +103,58 @@ impl Map {
     }
 }
 
+impl BaseMap for Map {
+    fn is_opaque(&self, index: usize) -> bool {
+        self.tiles[index as usize] == TileType::Wall
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
 pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
+    let mut viewsheds = ecs.write_storage::<Viewshed>();
+    let mut players = ecs.write_storage::<Player>();
     let map = ecs.fetch::<Map>();
-    let mut y = 0;
-    let mut x = 0;
 
-    for (_index, tile) in map.tiles.iter().enumerate() {
-        match tile {
-            TileType::Floor => {
-                ctx.set(
-                    x,
-                    y,
-                    RGB::from_f32(0.5, 0.5, 0.5),
-                    RGB::from_f32(0., 0., 0.),
-                    rltk::to_cp437('.'),
-                );
-            }
-            TileType::Wall => {
-                ctx.set(
-                    x,
-                    y,
-                    RGB::from_f32(0.0, 1.0, 0.0),
-                    RGB::from_f32(0., 0., 0.),
-                    rltk::to_cp437('#'),
-                );
-            }
-        }
+    for (_player, viewshed) in (&mut players, &mut viewsheds).join() {
+        let mut y = 0;
+        let mut x = 0;
 
-        x += 1;
-        if x > 79 {
-            x = 0;
-            y += 1;
+        for tile in map.tiles.iter() {
+            let point = Point::new(x, y);
+            if viewshed.visible_tiles.contains(&point) {
+                match tile {
+                    TileType::Floor => {
+                        ctx.set(
+                            x,
+                            y,
+                            RGB::from_f32(0.5, 0.5, 0.5),
+                            RGB::from_f32(0., 0., 0.),
+                            rltk::to_cp437('.'),
+                        );
+                    }
+                    TileType::Wall => {
+                        ctx.set(
+                            x,
+                            y,
+                            RGB::from_f32(0.0, 1.0, 0.0),
+                            RGB::from_f32(0., 0., 0.),
+                            rltk::to_cp437('#'),
+                        );
+                    }
+                }
+            }
+
+            // Move the coordinates
+            x += 1;
+            if x > 79 {
+                x = 0;
+                y += 1;
+            }
         }
     }
 }

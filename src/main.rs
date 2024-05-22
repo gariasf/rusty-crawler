@@ -1,14 +1,16 @@
 use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
 
-use crate::components::{Player, Position, Renderable};
+use crate::components::{Player, Position, Renderable, Viewshed};
 use crate::map::{draw_map, Map};
 use crate::player::player_input;
+use crate::visibility_system::VisibilitySystem;
 
 mod components;
 mod map;
 mod player;
 mod rect;
+mod visibility_system;
 
 struct State {
     ecs: World,
@@ -16,6 +18,8 @@ struct State {
 
 impl State {
     fn run_systems(&mut self) {
+        let mut visibility = VisibilitySystem {};
+        visibility.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -54,6 +58,7 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Position>();
     gamestate.ecs.register::<Renderable>();
     gamestate.ecs.register::<Player>();
+    gamestate.ecs.register::<Viewshed>();
 
     let map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -72,6 +77,10 @@ fn main() -> rltk::BError {
             background: RGB::named(rltk::BLACK),
         })
         .with(Player {})
+        .with(Viewshed {
+            visible_tiles: Vec::new(),
+            range: 8,
+        })
         .build();
 
     rltk::main_loop(context, gamestate)
