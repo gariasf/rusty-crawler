@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 
 use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
-use specs::{World, WorldExt};
+use specs::World;
 
 use crate::rect::Rect;
 
@@ -77,7 +77,7 @@ impl Map {
             let new_room = Rect::new(x, y, w, h);
             let mut ok = true;
             for other_room in map.rooms.iter() {
-                if new_room.intersect((other_room)) {
+                if new_room.intersect(other_room) {
                     ok = false
                 }
             }

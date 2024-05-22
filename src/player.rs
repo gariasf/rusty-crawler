@@ -1,12 +1,12 @@
 use std::cmp::{max, min};
 
-use rltk::{Rltk, VirtualKeyCode};
+use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 use specs::{Join, World};
 
 use crate::components::{Player, Position, Viewshed};
 use crate::map::{Map, TileType};
-use crate::State;
+use crate::{RunState, State};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -18,17 +18,21 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         let destination_index = map.xy_index(pos.x + delta_x, pos.y + delta_y);
 
         if map.tiles[destination_index] != TileType::Wall {
+            viewshed.dirty = true;
+
             pos.x = min(79, max(0, pos.x + delta_x));
             pos.y = min(49, max(0, pos.y + delta_y));
 
-            viewshed.dirty = true;
+            let mut player_pos = ecs.write_resource::<Point>();
+            player_pos.x = pos.x;
+            player_pos.y = pos.y;
         }
     }
 }
 
-pub fn player_input(gamestate: &mut State, ctx: &mut Rltk) {
+pub fn player_input(gamestate: &mut State, ctx: &mut Rltk) -> RunState {
     match ctx.key {
-        None => {}
+        None => return RunState::Paused,
         Some(key) => match key {
             VirtualKeyCode::Left | VirtualKeyCode::Numpad4 | VirtualKeyCode::A => {
                 try_move_player(-1, 0, &mut gamestate.ecs)
@@ -45,7 +49,9 @@ pub fn player_input(gamestate: &mut State, ctx: &mut Rltk) {
             VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::S => {
                 try_move_player(0, 1, &mut gamestate.ecs)
             }
-            _ => {}
+            _ => return RunState::Paused,
         },
     }
+
+    RunState::Runinng
 }
