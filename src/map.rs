@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB, SmallVec};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, SmallVec, RGB};
 use specs::World;
 
 use crate::rect::Rect;
@@ -18,7 +18,7 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
-    pub blocked : Vec<bool>
+    pub blocked: Vec<bool>,
 }
 
 impl Map {
@@ -68,7 +68,7 @@ impl Map {
             height: 50,
             revealed_tiles: vec![false; 80 * 50],
             visible_tiles: vec![false; 80 * 50],
-            blocked : vec![false; 80*50]
+            blocked: vec![false; 80 * 50],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -113,8 +113,10 @@ impl Map {
         map
     }
 
-    fn is_exit_valid(&self, x:i32, y:i32) -> bool {
-        if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
+            return false;
+        }
         let idx = self.xy_index(x, y);
         !self.blocked[idx]
     }
@@ -132,16 +134,39 @@ impl BaseMap for Map {
         rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 
-    fn get_available_exits(&self, index: usize) -> SmallVec<[(usize, f32); 10]> {
-        let mut exits = rltk::SmallVec::new();let x = index as i32 % self.width;
-        let y = index as i32 / self.width;
+    fn get_available_exits(&self, idx: usize) -> rltk::SmallVec<[(usize, f32); 10]> {
+        let mut exits = rltk::SmallVec::new();
+        let x = idx as i32 % self.width;
+        let y = idx as i32 / self.width;
         let w = self.width as usize;
 
         // Cardinal directions
-        if self.is_exit_valid(x-1, y) { exits.push((index-1, 1.0)) };
-        if self.is_exit_valid(x+1, y) { exits.push((index+1, 1.0)) };
-        if self.is_exit_valid(x, y-1) { exits.push((index-w, 1.0)) };
-        if self.is_exit_valid(x, y+1) { exits.push((index+w, 1.0)) };
+        if self.is_exit_valid(x - 1, y) {
+            exits.push((idx - 1, 1.0))
+        };
+        if self.is_exit_valid(x + 1, y) {
+            exits.push((idx + 1, 1.0))
+        };
+        if self.is_exit_valid(x, y - 1) {
+            exits.push((idx - w, 1.0))
+        };
+        if self.is_exit_valid(x, y + 1) {
+            exits.push((idx + w, 1.0))
+        };
+
+        // Diagonals
+        if self.is_exit_valid(x - 1, y - 1) {
+            exits.push(((idx - w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y - 1) {
+            exits.push(((idx - w) + 1, 1.45));
+        }
+        if self.is_exit_valid(x - 1, y + 1) {
+            exits.push(((idx + w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y + 1) {
+            exits.push(((idx + w) + 1, 1.45));
+        }
 
         exits
     }

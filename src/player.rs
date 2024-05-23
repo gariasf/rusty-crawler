@@ -31,24 +31,35 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 }
 
 pub fn player_input(gamestate: &mut State, ctx: &mut Rltk) -> RunState {
+    // Player movement
     match ctx.key {
-        None => return RunState::Paused,
+        None => return RunState::Paused, // Nothing happened
         Some(key) => match key {
-            VirtualKeyCode::Left | VirtualKeyCode::Numpad4 | VirtualKeyCode::A => {
-                try_move_player(-1, 0, &mut gamestate.ecs)
+            VirtualKeyCode::Left | VirtualKeyCode::Numpad4 | VirtualKeyCode::H => {
+                try_move_player(-1, 0, &mut gs.ecs)
             }
 
-            VirtualKeyCode::Right | VirtualKeyCode::Numpad6 | VirtualKeyCode::D => {
-                try_move_player(1, 0, &mut gamestate.ecs)
+            VirtualKeyCode::Right | VirtualKeyCode::Numpad6 | VirtualKeyCode::L => {
+                try_move_player(1, 0, &mut gs.ecs)
             }
 
-            VirtualKeyCode::Up | VirtualKeyCode::Numpad8 | VirtualKeyCode::W => {
-                try_move_player(0, -1, &mut gamestate.ecs)
+            VirtualKeyCode::Up | VirtualKeyCode::Numpad8 | VirtualKeyCode::K => {
+                try_move_player(0, -1, &mut gs.ecs)
             }
 
-            VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::S => {
-                try_move_player(0, 1, &mut gamestate.ecs)
+            VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::J => {
+                try_move_player(0, 1, &mut gs.ecs)
             }
+
+            // Diagonals
+            VirtualKeyCode::Numpad9 | VirtualKeyCode::Y => try_move_player(1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad7 | VirtualKeyCode::U => try_move_player(-1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad3 | VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad1 | VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
+
             _ => return RunState::Paused,
         },
     }
