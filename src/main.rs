@@ -1,8 +1,9 @@
 use rltk::{GameState, Point, Rltk, RGB};
 use specs::prelude::*;
 
-use crate::components::{Monster, Name, Player, Position, Renderable, Viewshed};
+use crate::components::{BlocksTile, Monster, Name, Player, Position, Renderable, Viewshed};
 use crate::map::{draw_map, Map};
+use crate::map_indexing_system::MapIndexingSystem;
 use crate::monster_ai_system::MonsterAI;
 use crate::player::player_input;
 use crate::visibility_system::VisibilitySystem;
@@ -13,6 +14,7 @@ mod monster_ai_system;
 mod player;
 mod rect;
 mod visibility_system;
+mod map_indexing_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -31,6 +33,8 @@ impl State {
         visibility.run_now(&self.ecs);
         let mut mob = MonsterAI {};
         mob.run_now(&self.ecs);
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -80,6 +84,7 @@ fn main() -> rltk::BError {
     gamestate.ecs.register::<Viewshed>();
     gamestate.ecs.register::<Monster>();
     gamestate.ecs.register::<Name>();
+    gamestate.ecs.register::<BlocksTile>();
 
     let map = Map::new_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -120,6 +125,7 @@ fn main() -> rltk::BError {
             .with(Name {
                 name: format!("{} #{}", &name, index),
             })
+            .with(BlocksTile{})
             .build();
     }
 

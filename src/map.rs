@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB, SmallVec};
 use specs::World;
 
 use crate::rect::Rect;
@@ -18,12 +18,19 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked : Vec<bool>
 }
 
 impl Map {
     // Get a unique 1D index for a set of 2D coordinates
     pub fn xy_index(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
+    }
+
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
     }
 
     pub fn apply_room_to_map(&mut self, room: &Rect) {
@@ -61,6 +68,7 @@ impl Map {
             height: 50,
             revealed_tiles: vec![false; 80 * 50],
             visible_tiles: vec![false; 80 * 50],
+            blocked : vec![false; 80*50]
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -104,11 +112,38 @@ impl Map {
 
         map
     }
+
+    fn is_exit_valid(&self, x:i32, y:i32) -> bool {
+        if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
+        let idx = self.xy_index(x, y);
+        !self.blocked[idx]
+    }
 }
 
 impl BaseMap for Map {
     fn is_opaque(&self, index: usize) -> bool {
         self.tiles[index as usize] == TileType::Wall
+    }
+
+    fn get_pathing_distance(&self, index1: usize, index2: usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(index1 % w, index1 / w);
+        let p2 = Point::new(index2 % w, index2 / w);
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
+    }
+
+    fn get_available_exits(&self, index: usize) -> SmallVec<[(usize, f32); 10]> {
+        let mut exits = rltk::SmallVec::new();let x = index as i32 % self.width;
+        let y = index as i32 / self.width;
+        let w = self.width as usize;
+
+        // Cardinal directions
+        if self.is_exit_valid(x-1, y) { exits.push((index-1, 1.0)) };
+        if self.is_exit_valid(x+1, y) { exits.push((index+1, 1.0)) };
+        if self.is_exit_valid(x, y-1) { exits.push((index-w, 1.0)) };
+        if self.is_exit_valid(x, y+1) { exits.push((index+w, 1.0)) };
+
+        exits
     }
 }
 
